@@ -7,11 +7,11 @@ type Contributor = {
 
 export const CONTRIBUTORS: Contributor[] = [
   {
-    name: "Pranshu Sethi",
-    github: "iampranshusethi",
+    name: 'Pranshu Sethi',
+    github: 'iampranshusethi',
   },
   {
-    name: "Ashutosh kesarwani",
-    github: "Lucifer-0612",
+    name: 'Ashutosh kesarwani',
+    github: 'Lucifer-0612',
   },
 ]
