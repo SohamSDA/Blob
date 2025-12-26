@@ -30,4 +30,8 @@ export const CONTRIBUTORS: Contributor[] = [
     name: 'Manisha katariya',
     github: 'chanchukatariya5',
   },
+  {
+    name: 'Sayed Al Amaan Zaidi',
+    github: 'amaan1114',
+  }
 ];
