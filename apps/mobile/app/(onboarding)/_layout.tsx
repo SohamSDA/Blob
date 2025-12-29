@@ -31,6 +31,7 @@ export default function OnboardingLayout() {
           name="login"
           options={{
             title: 'Login',
+            headerShown: false,
           }}
         />
       </Stack>
