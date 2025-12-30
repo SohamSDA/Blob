@@ -36,7 +36,11 @@ export async function signInWithGoogle() {
     const userInfo = await GoogleSignin.signIn();
 
     const idToken = userInfo.data?.idToken;
-    console.log('Google ID Token:', idToken);
+
+    if (!idToken) {
+      throw new Error('No ID token received from Google');
+    }
+    //got the token id
 
     return { idToken, userInfo };
   } catch (error) {

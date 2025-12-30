@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { signInWithGoogle, isGoogleSignInAvailable } from '@/hooks/useGoogleAuth';
 import { router } from 'expo-router';
+import { trpc } from '@/utils/trpc';
 
 const FLOW_STEPS = [
   {
@@ -43,6 +44,17 @@ export default function LoginScreen() {
       translateY: new Animated.Value(20),
     }))
   ).current;
+
+  // Set up the tRPC mutation hook
+  const verifyGoogleToken = trpc.auth.verifyGoogle.useMutation({
+    onSuccess: (result) => {
+      router.push('/(tabs)/home');
+    },
+    onError: (error) => {
+      console.error('Backend verification failed:', error);
+      Alert.alert('Verification Error', 'Failed to verify your Google account. Please try again.');
+    },
+  });
 
   useEffect(() => {
     Animated.sequence([
@@ -115,9 +127,17 @@ export default function LoginScreen() {
     }
 
     try {
-      await signInWithGoogle();
-      router.push('/(tabs)/home');
+      
+
+      const { idToken } = await signInWithGoogle();
+
+      if (!idToken) {
+        throw new Error('No ID token received from Google');
+      }
+      // Use the mutation to verify the token
+      verifyGoogleToken.mutate({ idToken });
     } catch (error) {
+      console.error(' Sign-in or verification failed:', error);
       Alert.alert('Sign-In Error', 'Failed to sign in with Google. Please try again.');
     }
   };
