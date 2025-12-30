@@ -6,9 +6,17 @@ import { StatusBar } from 'react-native';
 import { useColorScheme } from 'nativewind';
 
 import { TRPCProvider } from '@/utils/TRPCProvider';
+import { useEffect } from 'react';
+import { configureGoogleSignIn } from '@/hooks/useGoogleAuth';
+import Constants from 'expo-constants';
+
 
 export default function RootLayout() {
   const { colorScheme } = useColorScheme(); // nativewind hook
+  useEffect(() => {
+    if (Constants.expoRuntimeVersion == undefined)
+      configureGoogleSignIn()
+  }, [])
   return (
     <SafeAreaProvider>
       <TRPCProvider>
