@@ -11,10 +11,12 @@ import Constants from 'expo-constants';
 
 import { initDatabase } from '../src/db';
 import { configureGoogleSignIn } from '@/hooks/useGoogleAuth';
+import { useAuthStore } from '@/store/authStore';
 
 export default function RootLayout() {
   const systemScheme = useSysColorScheme();
   const { setColorScheme, colorScheme } = useNwColorScheme();
+  const initialize = useAuthStore((state) => state.initialize);
 
   // Sync system theme with NativeWind
   useEffect(() => {
@@ -36,6 +38,11 @@ export default function RootLayout() {
       .then(() => console.log('SQLite initialized'))
       .catch(err => console.error('SQLite init failed', err));
   }, []);
+
+  // Initialize auth state from secure storage
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
 
   return (
     <SafeAreaProvider>

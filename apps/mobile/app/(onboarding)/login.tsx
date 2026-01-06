@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { signInWithGoogle, isGoogleSignInAvailable } from '@/hooks/useGoogleAuth';
 import { router } from 'expo-router';
 import { trpc } from '@/utils/trpc';
+import { useAuthStore } from '@/store/authStore';
 
 const FLOW_STEPS = [
   {
@@ -103,6 +104,9 @@ export default function LoginScreen() {
     });
   }, []);
 
+  const login = useAuthStore((state) => state.login);
+  const verifyToken = trpc.verifyGoogleToken.useMutation();
+
   const handleGoogleSignIn = async () => {
     if (!isGoogleSignInAvailable()) {
       Alert.alert(
@@ -120,15 +124,22 @@ export default function LoginScreen() {
         return;
       }
       const result = await verifyToken.mutateAsync({ idToken });
-      console.log('Verification result:', result);
+
+      if (result.success && result.token && result.user) {
+        await login(result.token, {
+          id: result.user.id,
+          name: result.user.name,
+          email: result.user.email,
+          image: result.user.image,
+        });
+      }
+
       router.push('/(tabs)/home');
     } catch (error) {
       console.error('Sign-in error:', error);
       Alert.alert('Sign-In Error', 'Failed to sign in with Google. Please try again.');
     }
   };
-
-  const verifyToken = trpc.verifyGoogleToken.useMutation();
 
   return (
     <SafeAreaView className="flex-1 bg-white dark:bg-gray-950" edges={['top', 'left', 'right']}>
