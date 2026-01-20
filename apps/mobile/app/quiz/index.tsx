@@ -3,29 +3,36 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from 'nativewind';
+import { trpc } from '@/utils/trpc';
+import { useState } from 'react';
+import { RefreshControl } from 'react-native';
 
-const PLACEHOLDER_QUIZZES = [
-  {
-    id: '1',
-    title: 'JavaScript Basics Quiz',
-    description: 'Test your JS fundamentals',
-    questionCount: 10,
-  },
-  {
-    id: '2',
-    title: 'Advanced Concepts',
-    description: 'Closures, prototypes, and more',
-    questionCount: 15,
-  },
-];
 
 export default function QuizzesListScreen() {
   const { topicId } = useLocalSearchParams<{ topicId: string }>();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
 
-  const isLoading = false;
-  const quizzes = PLACEHOLDER_QUIZZES;
+  const [refreshing, setRefreshing] = useState(false);
+
+  const {
+    data,
+    isLoading,
+    error,
+    refetch,
+  } = trpc.quizzes.getByTopic.useQuery(
+    { topicId },
+    { enabled: !!topicId }
+  );
+
+  const quizzes = data?.quizzes ?? [];
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
+  };
+
 
   const handleStartQuiz = (quizId: string) => {
     router.push(`/quiz/${quizId}`);
@@ -35,10 +42,35 @@ export default function QuizzesListScreen() {
     console.log('Generate quiz with AI for topic:', topicId);
   };
 
+  if (!topicId || typeof topicId !== 'string') {
+    return (
+      <SafeAreaView className="flex-1 items-center justify-center bg-white dark:bg-black">
+        <Text className="text-gray-500 dark:text-gray-400">
+          Invalid topic
+        </Text>
+      </SafeAreaView>
+    );
+  }
+
   if (isLoading) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-white dark:bg-black">
         <ActivityIndicator size="large" color={isDark ? '#60A5FA' : '#2563EB'} />
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView className="flex-1 items-center justify-center bg-white dark:bg-black">
+        <Text className="mb-2 text-gray-700 dark:text-gray-300">
+          Failed to load quizzes
+        </Text>
+        <Pressable
+          onPress={() => refetch()}
+          className="rounded-lg bg-blue-600 px-4 py-2">
+          <Text className="font-semibold text-white">Retry</Text>
+        </Pressable>
       </SafeAreaView>
     );
   }
@@ -74,6 +106,13 @@ export default function QuizzesListScreen() {
           <FlatList
             data={quizzes}
             keyExtractor={(item) => item.id}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={isDark ? '#60A5FA' : '#2563EB'}
+              />
+            }
             renderItem={({ item }) => (
               <Pressable
                 onPress={() => handleStartQuiz(item.id)}
@@ -84,6 +123,8 @@ export default function QuizzesListScreen() {
                 {item.description && (
                   <Text className="mt-1 text-gray-600 dark:text-gray-400">{item.description}</Text>
                 )}
+                {/* Backend does not give question count */}
+                {/*
                 <View className="mt-3 flex-row items-center">
                   <Ionicons
                     name="help-circle-outline"
@@ -94,6 +135,7 @@ export default function QuizzesListScreen() {
                     {item.questionCount} questions
                   </Text>
                 </View>
+                */}
                 <View className="mt-3 flex-row justify-end">
                   <View className="flex-row items-center rounded-full bg-green-100 px-3 py-1 dark:bg-green-900/30">
                     <Ionicons name="play" size={14} color="#16A34A" />
